@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: react-app1
+spec:
+  selector:
+    app: react-app1
+  ports:
+    - protocol: TCP
+      port: 3000          # Port exposed by the Service (inside the cluster)
+      targetPort: 3000   # Port inside the container
+      nodePort: 32000    # Port on which the service is exposed on each node (external access)
+  type: NodePort
