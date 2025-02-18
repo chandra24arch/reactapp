@@ -1,0 +1,67 @@
+trigger: none
+    # Adjust the trigger to your branch
+ 
+pr:
+  - main  # Adjust the PR trigger to your branch
+ 
+variables:
+  SYSTEM_DEBUG: true
+  sonarQubeConnection: 'sonar-bhoomi'
+  sonarqubeProjectKey: 'ABC_React-B4-1.git_AZR4GB2rOO-guur3RrjR'
+  sonarqubeProjectName: 'React-B4-1.git'
+  sonarqubeToken: $(SONARQUBE_TOKEN)
+ 
+jobs:
+  - job: SonarQubeAnalysis
+    displayName: 'Run SonarQube Analysis for ReactJS Project'
+    pool:
+      name: 'Linux'
+ 
+    steps:
+      # Step 1: Install Node.js
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '16.x'
+        displayName: 'Install Node.js 16.x'
+ 
+      # Install dependencies using npm
+      - script: |
+          npm install
+        displayName: 'Install npm'
+ 
+      # Prepare SonarQube analysis
+      - task: SonarQubePrepare@5
+        displayName: 'Prepare SonarQube Analysis'
+        inputs:
+          SonarQube: $(sonarQubeConnection)
+          scannerMode: 'CLI'
+          projectKey: $(sonarqubeProjectKey)
+          projectName: $(sonarqubeProjectName)
+          extraProperties: |
+            sonar.login=$(sonarqubeToken)
+            sonar.projectKey=$(sonarqubeProjectKey)
+            sonar.sources=src
+            sonar.tests=src
+            sonar.test.inclusions=**/*.test.js,**/*.spec.js
+            sonar.exclusions=**/*.test.js,**/*.spec.js
+            sonar.javascript.lcov.reportPaths=coverage/lcov-report/index.html
+ 
+      # Build your React app (optional)
+      - script: |
+          npm run build
+        displayName: 'Build React App'
+        
+      # Check for Environment Variables
+      - script: |
+          printenv
+        displayName: 'Print Environment Variables'
+ 
+      # Run SonarQube analysis
+      - task: SonarQubeAnalyze@5
+        displayName: 'Execute SonarQube Analysis'
+ 
+      # Publish SonarQube analysis results
+      - task: SonarQubePublish@5
+        displayName: 'Publish SonarQube Analysis Results'
+        inputs:
+          pollingTimeoutSec: '300'  # Wait for 5 minutes for SonarQube results
